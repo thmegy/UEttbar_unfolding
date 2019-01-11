@@ -6,5 +6,7 @@ fbuenv
 *.so
 *.d
 *.tar.gz
+*__pycache__*
+architecture.txt
 
 

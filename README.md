@@ -4,24 +4,10 @@ Fully-Bayesian unfolding framework based on Python3 using PyMC3 library for Mark
 1.   [Setup](#setup)
 2.   [Examples for running FBU](#examples-for-running-fbu)
      * [Inpus structure and program flow](#inputs-structure-and-program-flow)
-     * [Rebinning input histograms](#rebinning-input-histograms)
-     * [Running bootstrapping on systematics](#running-bootstrapping-on-systematics)
-     * [Symmetrizing two-sided systematic shifts](#symmetrizing-two-sided-systematic-shifts)
-     * [Pruning shape and or normalization effects of systematics](#pruning-shape-and-or-normalization-effects-of-systematics)
-     * [Comparing systematic shifts with respect to nominal histogram](#comparing-systematic-shifts-with-respect-to-nominal-histogram)
      * [Preparing JSON inputs for FBU](#preparing-json-inputs-for-fbu)
         * [Examples how to create JSON inputs](#examples-how-to-create-json-inputs)
         * [Obtaining truth AC values](#obtaining-truth-ac-values)
      * [Running FBU with created JSON inputs](#running-fbu-with-created-json-inputs)
-        * [Linearity tests of FBU](#linearity-tests-of-fbu)
-        * [Post-fit correlations for nuisance parameters](#post-fit-correlations-for-nuisance-parameters)
-        * [Post-fit plots](#post-fit-plots)
-        * [Ranking of systematics effect on Ac](#ranking-of-systematics-effect-on-ac)
-3.   [Running FBU on GRID](#running-fbu-on-grid)
-     * [Setup for grid running](#setup-for-grid-running)
-     * [Grid submission scripts usage](#grid-submission-scripts-usage)
-        * [Example prun command](#example-prun-command)
-        * [Running systematics ranking on grid](#running-systematics-ranking-on-grid)
 
 # Setup
 
@@ -32,22 +18,8 @@ The current setup assumes that you have access to cvmfs and the lcg software via
 
 Clone the repo
 ~~~{.sh}
-git clone ssh://git@gitlab.cern.ch:7999/atlas-phys-top-Ac/FBU_unfolding.git
-cd FBU_unfolding
-~~~
-
-Setup configuration files -- copy examples into `config` directory
-~~~{.sh}
-cd config
-cp examples/config_unfolding_example.json config_unfolding.json
-cp examples/rebin_config_example.json rebin_config.json
-cp examples/syst_pruning_example.json syst_pruning.json
-cp examples/truth_dY_example.json truth_dY.json
-~~~
-
-Copy inputs to produce json files used for unfolding:
-~~~{.sh}
-cp -R /afs/cern.ch/work/m/mmelo/public/data .
+git clone git@github.com:clementhelsens/UEttbar_unfolding.git
+cd UEttbar_unfolding
 ~~~
 
 Install software + create virtual python environment (venv). Everything is done automatically using `install.sh` script:
@@ -298,89 +270,3 @@ Extra usefull parameter examples:
   * `-q` Show a line for "naive sum of squared systematics" -- efffect of each systematic in ranking is summed in quadrature
   * `-s` Show a line for stat-only uncertainty
 
-# Running FBU on grid
-Because of the computational complexity of the sampling, for cerain tests, it makes sense to leverage GRID, such as for running pseudoexperiments with full systematics. For this purpose, a script `submit_grid.py` has been added.
-
-## Setup for grid running
-
-**NOTE: It is not possible to use the same setup for grid jobs as for local running. New setup must be done:**
-~~~{.sh}
-git clone ssh://git@gitlab.cern.ch:7999/atlas-phys-top-Ac/FBU_unfolding.git FBU_unfolding_grid
-cd FBU_unfolding_grid
-source install_grid.sh x86_64-slc6-gcc62-opt
-~~~
-The `install_grid.sh` only setups Python 3 from lcg and all other dependencies are installed via pip. For purely running FBU on grid, you do not need it, for all other purposes outside of grid, stick to the non-grid setup above. For the architecture `x86_64-slc6-gcc62-opt` specification, see general setup at the beginning of README.
-
-**NOTE2: Unfortunately panda tools don't seem to be python3-compatible. In order to submit jobs to grid, launch a new command line shell and only setup panda without setting up fbu: `lsetup panda`.**
-
-**NOTE3: prun will upload a compressed tar.gz archive of the working directory, which is sent to grid. It is advisable to have a clean FBU working directory, with only the data/json inputs that are needed to minimize the tarball size. See below for excluding files/directories from the tar.gz archive.**
-
-## Grid submission scripts usage
-
-Usage of the script `submit_grid.py optionalArguments cmd`
-
-Where `cmd` is the command to run. **For full list of optional arguments, run `submit_grid.py --help`**. The command to run can be of two kinds depending on if parameter `-r` is give to `submit_grid.py`:
-
-  * Any shell script -- if `submit_grid.py -r optionalArguments... cmd` (note the `-r` parameter that enables any general script)
-  * `runUnfolding.py` command `submit_grid.py optionalArguments... "python3 python/runUnfolding.py unfoldingArguments..."` (without the `-r` parameter).
-
-The `submit_grid.py` creates a script which contains setup and the command/script to execute and submits stuff via `prun`. For running any shell script, there are two environmental variables exported, which can be leveraged:
-
-  * `$SEED` -- seed of the particular sub-job that run the script. This allows user to run different stuff in different subjobs on grid such as pseudoexperiments, anything where you leverage that each job has a unique seed.
-  * `$OUTPUTDIR` -- the output directory which will be compressed and provided in the output dataset. Any output must be put inside this directory, otherwise it will not be available for download!
-
-There are a couple of rules specific to running stuff on grid:
-
-  * Do not specify the following parameters in `runUnfolding.py` in the second approach as they are treated separately and are controlled by the `submit_grid.py` script:
-    * `-o`/`--output`
-    * `-n`/`--nsubjobs`
-    * `-s`/`--seed` (seed of each job, handled by seed specification of `prun`)
-    * `-u`/`--shift` (the initial seed, handeled by seed specification of `prun`)
-
-  * One of the compulsory parameters for any job on grid to specify is `--outDS user.cernname.whateveryouwant`
-  * To run subjobs, for instance for pseudoexperiments, you have the following options at hand:
-    * `-n`/`--njobs` &ndash; Number of jobs to run for each panda task -- this is the **number of parallel jobs** run on nodes on grid.
-    * `-s`/`--nsubjobs` &ndash; How many pseudoexperiments a single unfolding job should run. In other words, each of the `--njobs` runs `--nsubjobs`.
-    * `-u`/`--shift` &ndash; Intial seed number. All the jobs and subjobs will increment seeds from this initial seed.
-  * A single panda task (one execution of the `prun` command) is hereby considered as a collection of parallel jobs, for instance for running large numbers of CPU-intensive pseudoexperiments. For the approach of running any command in general, note that the seed and output directory (`-o` argument) is passed to the script executed, so that you can use them in the script.
-  * Explanation of seed manipulation for jobs and subjobs:
-
-    * Each job of a given panda task is executed with seed `-s $(( %RNDM:0 * ${NSUBJOBS} + ${SHIFT} ))`.
-    * `${SHIFT}` is the number specified by above `-u`/`--shift` parameter, this determines the seed used by first job.
-    * The `${NSUBJOBS}` is the `--nsubjobs` parameter.
-    * `%RNDM:0` is a number starting from 0 (specified by the `:0` after `%RNDM`), incremented for every job within the panda task.
-    * **Example**: For `--njobs 10 --nsubjobs 5 --shift 1`, each job will launch unfolding that will run 5 sub-jobs. Initial seed of 0-th job will be `-s $(( 0 * 5 + 1))` = `1`. The 5 subjobs of `runUnfolding.py` will then have seeds 1 to 5. Next, 1-st job will have `-s $(( 1 * 5 + 1))` = `6`. Thus the 5 subjobs of this job will have seeds 6 to 10. Thus it is ensured, that running whatever number of pseudoexperiments split into some number of jobs and subjobs will ensure each pseudoexperiment has an independent seed used. Hopefully the logic is clear from this example.
-
-### Example prun command:
-~~~{.sh}
-python submit_grid.py "python python/runUnfolding.py -t '' -a 'asimov' -i data/json -d 4 -f -e resolved_muelecombine12tagQ_boosted_muelecombine12tagQ -c 10000 -g config/config_unfolding_continuous.json" -s 1 -n 1 -m 6000 -c 4 -t 86400 -o output --outDS 'user.omajersk.fbu_test2_incl_fullsyst' --prunArgs ' --excludedSite=ANALY_MWT2_MCORE_SL7' -a x86_64-slc6-gcc62-opt
-~~~
-The above command does:
-
-  * Executes unfolding specified by the command in "" (so in this case inclusive unfolding with 10k steps per chain)
-  * There is one job (`-n 1`) with one subjob (`-s 1`).
-  * Memory requested for job is 6GB (`-m 6000`).
-  * Maximum CPU time is set to 24 hours (`-t 86400` in seconds) -- this is to prevent panda from killing the job because we do not write any output before we finish the sampling.
-  * CPU count specified to be 4 by `-c 4`.
-  * FBU will produce outputs in `output` directory, which will be compressed into `output.tar.gz`. This tarball will be available as output for download from grid (check the output dataset name on panda job page).
-  * Extra commands for `prun` can be specified by the `--prunArgs ''`. See `prun --help` for full list. This is in particular usefull for tinkering with suff like excluded grid sites (`--excludedSite=site1,site2,...`), or for instance to do a dry run (`--noSubmit`, only tests tarball creation and job submission, but job is not uploaded to panda).
-  * Architecture of the grid site is specified by `-a` argument. This architecture should be the same as the architecture setup via `lsetup` (see contents of `install_grid.sh`).
-  * If you wish to reuse the fbu.tar.gz archive for subsequent panda task submissions, use `--reuseTarBall` option. **NOTE that this means that no changes to job run can be made -- the tarball contains the script with FBU command to execute!**
-  * To exclude files or directories from grid, one can use `--exclude='match1,match2'` option, providing a list of strings to match the files/dirs to ommit. Basic support for regular expressions (such as \*) should work.
-
-### Running systematics ranking on grid
-
-It is possible to run systematics ranking (see sections above for instructions on how to prepare FBU inputs for the ranking procedure) on grid via the general script or command approach. An example script is provided in `scripts/examples/FBU_syst_ranking_grid.sh`. The script can be launched to grid by running:
-
-~~~{.sh}
-python2 submit_grid.py -r -m 4000 -n `cat path_to_config_list | wc` -o output_grid_systrank_map_dy --outDS user.omajersk.someName "bash scripts/FBU_syst_ranking_grid.sh varName path_to_config_list path_to_systrank_inputs"
-~~~
-
-The `FBU_syst_ranking_grid.sh`, a sseen in the example submission command above, takes arguments:
-
-  * `varName` -- variable to unfold, for example `dypttt`.
-  * `path_to_config_list` -- path to text file, that contains the list of systematics to rank.
-  * `path_to_systrank_inputs` -- path to directory containing the inputs for systematics ranking. See the syst ranking script for further documentation on the structure of the JSON inputs and JSON config for runUnfolding to be able to run the systematics ranking.
-
-Pay attention to use of `-r` parameter indicating that we want to run a general script, and the `-n` parameter specifying the number of jobs. It must be set to the number of systematics (including baselines such as nominal AFII and the 0th PDF variation). In the example above, we use `cat` and `wc` commands to extract the number of systematics from the text file list of systematics to rank.
-The `FBU_syst_ranking_grid.sh` script template is provided in `scripts/examples`. It is recommended to make a copy of it to `scripts` and edit as necessary. (This way people do not accidentaly overwrite the example template in future commits...)
