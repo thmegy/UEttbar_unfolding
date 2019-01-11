@@ -35,8 +35,4 @@ cd ..
 source fbuenv/bin/activate
 echo "> Installing extra dependencies via pip"
 pip install -r install_packages_pip.txt
-
-echo "> Compiling extra C++ code"
-cd ./src
-make
 cd -
