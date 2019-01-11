@@ -30,7 +30,8 @@ Where `x86_64-slc6-gcc62-opt` is the architecture of the system where you are se
 
 ## Sourcing FBU environment
 
-For repeated setup environment (use this instead of above installation steps) use `init.sh` script inside `$UNFOLDINGDIR` (assumes you have $ATLAS_LOCAL_ROOT_BASE variable set up):
+Once the install has been done, and each time when login to a new machine, use the `init.sh` script instead of above installation. 
+Please note that it assumes that $ATLAS_LOCAL_ROOT_BASE variable is set up:
 ~~~{.sh}
 source init.sh
 ~~~
@@ -38,17 +39,8 @@ source init.sh
 # Examples for running FBU
 
 ## Inputs structure and program flow
-FBU uses inputs in a format of `histos/systematic/region/map_distribution_channel.root`, where the folder structure is as shown (systematics folder e.g. EG_RESOLUTION_ALL__1up, and region subfolders, e.g. resolved_muele, dilepton_emu, etc) and distribution is dy, dypttt, dymtt, dybetatt, i.e. any dY vs X (inclusive or differential) observable to unfold. Channels are typically meant such as b-tag multiplicity, lepton charge sign, etc.
+FBU uses inputs in a `json` format. It is then necessary to transform histograms stored in ROOT files to `json` files.
 
-By default the inputs are produced un-rebined (with exception of bootstrapping replicas which would otherwise be unbearably large). The dY vs X double-differential observables are TH2 histograms with differential binning on Y axis and dY binning on X axis. The first step is to rebin the inputs histograms to final format, which is TH1 histograms where differential bins are stacked next to each other. See section on rebinning inputs histograms below.
-
-In addition to rebinning, a number of operations can be performed on these inputs, that *preserve* the folder structure, such that these operations can be applied in various order or omitted. The operations are:
-
-  * Symmetrizing up/down systematic variations
-  * Bootstrapping for non-scale-factor systematic variations
-  * General pruning of normalization and or shape of systematics
-
-The current consensus is to first perform bootstrapping, then symmetrize up/down variations and finally perform systematics pruning. **NOTE that it is recommended to run symmetrization even if pruning is not used. The symmetrization code has better handling of corner cases such as both up/down shifts changing bin yields in the same direction, etc. These cases are otherwise not properly handeled!**
 
 Finally, JSON based inputs are produced from the above root inputs. The JSON inputs can be combined between channels and regions (note that combining any decay channels such as l+jets and dilepton is not yet possible). The JSON inputs are used by FBU unfolding itself.
 
