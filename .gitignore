@@ -1,0 +1,10 @@
+*.pyc
+core*
+*.root
+fbuenv
+*.o
+*.so
+*.d
+*.tar.gz
+
+
