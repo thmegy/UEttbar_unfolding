@@ -1,11 +1,23 @@
 import numpy as np
 import json
 import matplotlib.pyplot as plt
+import sys
 
-trace = np.load('OutDir/fulltrace.npy')
+if len(sys.argv)!=3:
+    sys.exit('usage: python python/doplots.py trace.npy truth.json')
+
+trace=None
+try:
+    trace = np.load(sys.argv[1])
+except IOError as e:
+    print ('I/O error({0}): {1}'.format(e.errno, e.strerror))
+    
 truth = None
-with open('full.json') as json_file:  
-    truth = json.load(json_file)
+with open(sys.argv[2]) as json_file:  
+    try:
+        truth = json.load(json_file)
+    except ValueError as e:
+        print ('ValueError error({0}): {1}'.format(e.errno, e.strerror))
 
 mean = []
 rms  = []
