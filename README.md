@@ -24,7 +24,7 @@ cd UEttbar_unfolding
 
 Install software + create virtual python environment (venv). Everything is done automatically using `install.sh` script:
 ~~~{.sh}
-source install.sh x86_64-slc6-gcc62-opt
+source install.sh x86_64-centos7-gcc8-opt
 ~~~
 Where `x86_64-slc6-gcc62-opt` is the architecture of the system where you are setting things up. The example given works for lxplus, check your architecture (in particular `slc6` vs `slc5`, `centos7`, etc...) for use elsewhere. The `gcc` version is set to `gcc62` which is currently heavily used in recent ASG software releases and also supported by `lcg` software.
 

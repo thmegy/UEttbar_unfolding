@@ -3,7 +3,7 @@
 if ! [[ $# -eq 1 ]] ; then
     echo "Usage: source ${0} <architecture>"
     echo "Where <architecture> is the architecture specification used by lsetup from cvmfs"
-    echo "Example architecture: x86_64-slc6-gcc62-opt"
+    echo "Example architecture: x86_64-centos7-gcc8-opt"
     return 1
 fi
 
@@ -24,7 +24,7 @@ alias setupATLAS="source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh"
 echo "> setupATLAS"
 setupATLAS --quiet
 echo "> Setup Python3+ROOT"
-lsetup "lcgenv -p LCG_93python3 ${LCG_ARCH} ROOT" --quiet
+lsetup "lcgenv -p LCG_96python3rc1 ${LCG_ARCH} ROOT" --quiet
 export UNFOLDINGDIR=$PWD
 
 echo "> Setting up virtualenv 'fbuenv'"

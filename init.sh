@@ -19,7 +19,7 @@ fi
 echo "> setupATLAS"
 setupATLAS --quiet
 echo "> Setup Python3+ROOT"
-lsetup "lcgenv -p LCG_93python3 ${LCG_ARCH} ROOT" --quiet
+lsetup "lcgenv -p LCG_96python3rc1 ${LCG_ARCH} ROOT" --quiet
 export UNFOLDINGDIR=$PWD
 export OMP_NUM_THREADS=1 # if openblas is mltithreaded,it iterferes with our multithreaded FBU (especially if limited number of CPUs is specified on grid/batch), resulting in much slower performance
 

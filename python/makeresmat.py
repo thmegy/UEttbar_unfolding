@@ -74,7 +74,8 @@ if(__name__=="__main__"):
     hname_reco   = '{}_reco'.format(hname)
     hname_truth  = '{}_truth'.format(hname)
     hname_resmat = '{}_reco_vs_truth'.format(hname)
-    hname_resmat=hname_resmat.replace('_ntracks','_2d_ntracks')
+    #hname_resmat=hname_resmat.replace('_ntracks','_2d_ntracks')
+    hname_reco = hname_reco.replace('_reco','_toydata_reco')
     
     if '.root' not in tfn:
         sys.exit('input file is not a ROOT file')

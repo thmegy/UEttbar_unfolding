@@ -5,6 +5,7 @@ import os
 
 defaultOptions = {
     'prior' : 'Uniform',
+    'priorparams' : {},
     'nCores' : 4,
     'nChains' : 4,
     'monitoring' : False,
@@ -56,6 +57,7 @@ if(__name__=="__main__"):
 
     myfbu.lower = [abs(i*0.) for i in truth]
     myfbu.upper = [abs(i*10.) for i in truth]
+    myfbu.priorparams = defaultOptions['priorparams']
 
     myfbu.rndseed == -1
     myfbu.data = np.array(json.load(open(reco)))
