@@ -74,6 +74,8 @@ if(__name__=="__main__"):
     hname_reco   = '{}_reco'.format(hname)
     hname_truth  = '{}_truth'.format(hname)
     hname_resmat = '{}_reco_vs_truth'.format(hname)
+    hname_bkg   = '{}_410648'.format(hname)
+
     #hname_resmat=hname_resmat.replace('_ntracks','_2d_ntracks')
     hname_reco = hname_reco.replace('_reco','_toydata_reco')
     
@@ -85,12 +87,15 @@ if(__name__=="__main__"):
         
     h_reco = gethisto(tfn,hname_reco)
     h_full = gethisto(tfn,hname_truth)
-    
+    h_bkg = gethisto(tfn,hname_bkg)
+   
     l_reco = histo2list(h_reco)
     l_full = histo2list(h_full)
+    l_bkg = histo2list(h_bkg)
 
     writejson('reco.json',l_reco)
     writejson('full.json',l_full)
+    writejson('bkg.json',l_bkg)
 
     h_mig  = gethisto(tfn,hname_resmat)
 

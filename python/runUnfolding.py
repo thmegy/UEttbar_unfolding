@@ -30,12 +30,14 @@ if(__name__=="__main__"):
 
     parser.add_argument('--truth',  type=str, help='truth spectrun in json file', default='')
     parser.add_argument('--reco',   type=str, help='reco spectrum in json file', default='')
+    parser.add_argument('--bkg',   type=str, help='background spectrum in json file', default='')
     parser.add_argument('--resmat', type=str, help='response matrix in json file', default='')
     parser.add_argument('--outdir', type=str, help='out directory to store outputs', default='OutDir')
 
     args, _ = parser.parse_known_args()
     truth = args.truth
     reco  = args.reco
+    bkg  = args.bkg
     resmat = args.resmat
     outdir = args.outdir
 
@@ -58,6 +60,11 @@ if(__name__=="__main__"):
     myfbu.lower = [abs(i*0.) for i in truth]
     myfbu.upper = [abs(i*10.) for i in truth]
     myfbu.priorparams = defaultOptions['priorparams']
+
+
+    bkg = json.load(open(bkg))
+    myfbu.background = {'singletop':bkg}
+    myfbu.backgroundsyst = {'singletop':0.0}
 
     myfbu.rndseed == -1
     myfbu.data = np.array(json.load(open(reco)))
