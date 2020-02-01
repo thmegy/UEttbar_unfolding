@@ -67,17 +67,13 @@ def gethisto(tfn,hname):
 if(__name__=="__main__"):
 
     if len(sys.argv)!=3:
-        sys.exit('usage: python python/makeresmat.py infile.root histoname')
+        sys.exit('usage: python python/makeresmat.py infile.root variable')
 
     tfn = sys.argv[1]
-    hname = sys.argv[2]
-    hname_reco   = '{}_reco'.format(hname)
-    hname_truth  = '{}_truth'.format(hname)
-    hname_resmat = '{}_reco_vs_truth'.format(hname)
-    hname_bkg   = '{}_410648'.format(hname)
-
-    #hname_resmat=hname_resmat.replace('_ntracks','_2d_ntracks')
-    hname_reco = hname_reco.replace('_reco','_toydata_reco')
+    hname_data   = 'toydata'
+    hname_truth  = 'ttbar_truth'
+    hname_resmat = 'reco_vs_truth'
+    hname_bkg   = ['singletop', 'diboson']
     
     if '.root' not in tfn:
         sys.exit('input file is not a ROOT file')
@@ -85,17 +81,22 @@ if(__name__=="__main__"):
     if  not os.path.isfile(tfn):
         sys.exit('inut file does not exist')
         
-    h_reco = gethisto(tfn,hname_reco)
-    h_full = gethisto(tfn,hname_truth)
-    h_bkg = gethisto(tfn,hname_bkg)
+    h_data = gethisto(tfn,hname_data)
+    h_truth = gethisto(tfn,hname_truth)
+    h_bkg = [gethisto(tfn,i) for i in hname_bkg]
    
-    l_reco = histo2list(h_reco)
-    l_full = histo2list(h_full)
-    l_bkg = histo2list(h_bkg)
+    l_data = histo2list(h_data)
+    l_truth = histo2list(h_truth)
+    l_bkg = []
+    for i, j in zip(hname_bkg, h_bkg):
+        l_bkg.append( (i, histo2list(j)) )
 
-    writejson('reco.json',l_reco)
-    writejson('full.json',l_full)
-    writejson('bkg.json',l_bkg)
+    if not os.path.isdir(sys.argv[2]):
+        os.mkdir(sys.argv[2])
+
+    writejson(sys.argv[2]+'/data.json',l_data)
+    writejson(sys.argv[2]+'/truth.json',l_truth)
+    writejson(sys.argv[2]+'/bkg.json',l_bkg)
 
     h_mig  = gethisto(tfn,hname_resmat)
 
@@ -110,10 +111,10 @@ if(__name__=="__main__"):
             value=0.
             if h_mig.GetBinContent(x,y) >0:
                 value = h_mig.GetBinContent(x,y)/norm
-            value = value*getEff(h_mig,h_full,y)
+            value = value*getEff(h_mig,h_truth,y)
             truthbin.append(value)
         migration.append(truthbin)
 
-    writejson('resmat.json',migration)
-    testinputs(l_full, migration, l_reco)
+    writejson(sys.argv[2]+'/resmat.json',migration)
+    testinputs(l_truth, migration, l_data)
 
