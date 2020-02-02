@@ -2,6 +2,7 @@ import numpy as np
 import json
 import matplotlib.pyplot as plt
 import os
+import math
 
 if(__name__=="__main__"):
 
@@ -67,3 +68,13 @@ if(__name__=="__main__"):
     
     plt.savefig(args.path+'plots/unfolded.eps')
     plt.close()
+
+
+
+    average = sum( [x[i] * mean[i] for i in range(len(mean))] ) / sum(mean)
+
+    sum_bins_content = sum( mean )
+    sum_bins_weighted = sum( [x[i] * mean[i] for i in range(len(mean))] )
+    average_unc = math.sqrt( sum( [((x[i]*sum_bins_content + sum_bins_weighted) * rms[i])**2 for i in range(len(mean))] ) ) / sum(mean)**2
+
+    print( '{} = {} +- {}'.format(args.path.replace('/', ''), -9 * average, 9 * average_unc) )

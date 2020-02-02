@@ -1,5 +1,6 @@
 import ROOT as r
 from numpy import dot, random
+import numpy as np
 import json
 from utils import writejson
 import sys, os
@@ -63,6 +64,26 @@ def gethisto(tfn,hname):
         tfo.Close()
         return hclone
     return h
+
+
+#________________________________________
+def getSystList(inputfile):
+    systs = []
+    try:
+        infile = open(inputfile, 'r')
+        lines = infile.readlines()
+        for line in lines:
+            if ('#' not in line) and (line is not '\n') :
+                systs.append(line.replace('\n', ''))
+    except:
+        sys.exit('The systematics could not be recovered!!')
+
+    return systs
+
+
+
+
+
 #________________________________________
 if(__name__=="__main__"):
 
@@ -74,7 +95,8 @@ if(__name__=="__main__"):
     hname_truth  = 'ttbar_truth'
     hname_resmat = 'reco_vs_truth'
     hname_bkg   = ['singletop', 'diboson']
-    
+    systs = getSystList('python/systematics.txt')
+
     if '.root' not in tfn:
         sys.exit('input file is not a ROOT file')
 
@@ -118,3 +140,29 @@ if(__name__=="__main__"):
     writejson(sys.argv[2]+'/resmat.json',migration)
     testinputs(l_truth, migration, l_data)
 
+
+    ## Get systematic variations
+
+    # For signal
+    h_ttbar = gethisto(tfn, 'ttbar')
+    l_ttbar = np.array(histo2list(h_ttbar))
+    l_ttbar_syst = []
+    for syst in systs:
+        h_syst = gethisto(tfn, 'ttbar_{}'.format(syst))
+        l_syst = np.array(histo2list(h_syst))
+        l_ttbar_syst.append( (syst, (l_syst-l_ttbar) / l_ttbar) )
+
+    writejson(sys.argv[2]+'/ttbar_syst.json',l_ttbar_syst)
+
+
+    ## For backgrounds
+    l_bkg_syst_all = []
+    for syst in systs:
+        l_syst = []        
+        for bkg in l_bkg:
+            h_bkg_syst = gethisto(tfn, '{}_{}'.format(bkg[0], syst))
+            l_bkg_syst = np.array(histo2list(h_bkg_syst))
+            l_syst.append( (bkg[0], (l_bkg_syst-np.array(bkg[1])) / np.array(bkg[1])) )
+        l_bkg_syst_all.append( (syst, l_syst) )
+
+    writejson(sys.argv[2]+'/bkg_syst.json',l_bkg_syst_all)
