@@ -23,23 +23,14 @@ def default(o):
     raise TypeError
 
 #________________________________________
-if(__name__=="__main__"):
+def main(args):
 
-    import argparse
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument( '-p', '--path', type=str, help='path to inputs')
-    parser.add_argument('--truth',  type=str, help='truth spectrun in json file', default='truth.json')
-    parser.add_argument('--data',   type=str, help='data spectrum in json file', default='data.json')
-    parser.add_argument('--bkg',   type=str, help='background spectrum in json file', default='bkg.json')
-    parser.add_argument('--resmat', type=str, help='response matrix in json file', default='resmat.json')
-    parser.add_argument('--outdir', type=str, help='out directory to store outputs', default='OutDir')
-
-    args, _ = parser.parse_known_args()
     truth = args.path + args.truth
     data  = args.path + args.data
     bkg  = args.path + args.bkg
     resmat = args.path + args.resmat
+    sigsyst = args.path + args.sigsyst
+    bkgsyst = args.path + args.bkgsyst
     outdir = args.path + args.outdir
 
     myfbu = fbu.PyFBU()
@@ -62,13 +53,18 @@ if(__name__=="__main__"):
     myfbu.upper = [abs(i*10.) for i in truth]
     myfbu.priorparams = defaultOptions['priorparams']
 
-
+    # Add backgrounds
     bkgs = json.load(open(bkg))
-    myfbu.background = {}
-    myfbu.backgroundsyst = {}
+    myfbu.background = bkgs
     for bkg in bkgs:
-        myfbu.background[bkg[0]] = bkg[1]
-        myfbu.backgroundsyst[bkg[0]] = 0.
+        myfbu.backgroundsyst[bkg] = 0.
+
+    # Add systematics
+    sigsyst = json.load(open(sigsyst))
+    bkgsyst = json.load(open(bkgsyst))
+    myfbu.objsyst = { 'signal' : sigsyst,
+                      'background' : bkgsyst}
+
 
     myfbu.rndseed == -1
     myfbu.data = np.array(json.load(open(data)))
@@ -87,3 +83,21 @@ if(__name__=="__main__"):
 
 
 
+
+#________________________________________
+if __name__ == "__main__":
+
+    import argparse
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('path', type=str, help='path to inputs')
+    parser.add_argument('--truth',  type=str, help='truth spectrun in json file', default='truth.json')
+    parser.add_argument('--data',   type=str, help='data spectrum in json file', default='data.json')
+    parser.add_argument('--bkg',   type=str, help='background spectrum in json file', default='bkg.json')
+    parser.add_argument('--resmat', type=str, help='response matrix in json file', default='resmat.json')
+    parser.add_argument('--sigsyst', type=str, help='signal systematics in json file', default='ttbar_syst.json')
+    parser.add_argument('--bkgsyst', type=str, help='background systematics in json file', default='bkg_syst.json')
+    parser.add_argument('--outdir', type=str, help='out directory to store outputs', default='OutDir')
+
+    args = parser.parse_args()
+    main(args)

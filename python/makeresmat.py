@@ -91,7 +91,7 @@ if(__name__=="__main__"):
         sys.exit('usage: python python/makeresmat.py infile.root variable')
 
     tfn = sys.argv[1]
-    hname_data   = 'toydata'
+    hname_data   = 'mcdata'
     hname_truth  = 'ttbar_truth'
     hname_resmat = 'reco_vs_truth'
     hname_bkg   = ['singletop', 'diboson']
@@ -109,16 +109,17 @@ if(__name__=="__main__"):
    
     l_data = histo2list(h_data)
     l_truth = histo2list(h_truth)
-    l_bkg = []
+    bkg_dict = {}
     for i, j in zip(hname_bkg, h_bkg):
-        l_bkg.append( (i, histo2list(j)) )
+        bkg_dict[i] = histo2list(j)
+
 
     if not os.path.isdir(sys.argv[2]):
         os.mkdir(sys.argv[2])
 
     writejson(sys.argv[2]+'/data.json',l_data)
     writejson(sys.argv[2]+'/truth.json',l_truth)
-    writejson(sys.argv[2]+'/bkg.json',l_bkg)
+    writejson(sys.argv[2]+'/bkg.json',bkg_dict)
 
     h_mig  = gethisto(tfn,hname_resmat)
 
@@ -146,23 +147,23 @@ if(__name__=="__main__"):
     # For signal
     h_ttbar = gethisto(tfn, 'ttbar')
     l_ttbar = np.array(histo2list(h_ttbar))
-    l_ttbar_syst = []
+    ttbar_syst_dict = {}
     for syst in systs:
         h_syst = gethisto(tfn, 'ttbar_{}'.format(syst))
         l_syst = np.array(histo2list(h_syst))
-        l_ttbar_syst.append( (syst, (l_syst-l_ttbar) / l_ttbar) )
+        ttbar_syst_dict[syst] = (l_syst-l_ttbar) / l_ttbar
 
-    writejson(sys.argv[2]+'/ttbar_syst.json',l_ttbar_syst)
+        writejson(sys.argv[2]+'/ttbar_syst.json', ttbar_syst_dict)
 
 
     ## For backgrounds
-    l_bkg_syst_all = []
+    bkg_syst_dict = {}
     for syst in systs:
-        l_syst = []        
-        for bkg in l_bkg:
-            h_bkg_syst = gethisto(tfn, '{}_{}'.format(bkg[0], syst))
+        syst_dict = {}        
+        for bkg in hname_bkg:
+            h_bkg_syst = gethisto(tfn, '{}_{}'.format(bkg, syst))
             l_bkg_syst = np.array(histo2list(h_bkg_syst))
-            l_syst.append( (bkg[0], (l_bkg_syst-np.array(bkg[1])) / np.array(bkg[1])) )
-        l_bkg_syst_all.append( (syst, l_syst) )
+            syst_dict[bkg] = (l_bkg_syst-np.array(bkg_dict[bkg])) / np.array(bkg_dict[bkg])
+        bkg_syst_dict[syst] = syst_dict
 
-    writejson(sys.argv[2]+'/bkg_syst.json',l_bkg_syst_all)
+    writejson(sys.argv[2]+'/bkg_syst.json',bkg_syst_dict)
