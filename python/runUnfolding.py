@@ -2,12 +2,13 @@ import fbu
 import json
 import numpy as np
 import os
+import pickle
 
 defaultOptions = {
     'prior' : 'Uniform',
     'priorparams' : {},
-    'nCores' : 4,
-    'nChains' : 4,
+    'nCores' : 16,
+    'nChains' : 16,
     'monitoring' : False,
     'verbose' : False,
     'discard_tuned_samples' : True
@@ -38,13 +39,13 @@ def main(args):
     myfbu.nCores = defaultOptions['nCores']
     myfbu.nChains = defaultOptions['nChains']
     myfbu.nMCMC = 10000
-    myfbu.nTune = int(myfbu.nMCMC/4)
+    myfbu.nTune = int(myfbu.nMCMC/2)
     myfbu.discard_tuned_samples = defaultOptions['discard_tuned_samples']
     myfbu.nuts_kwargs={'target_accept':0.95}
     myfbu.response   = json.load(open(resmat))
 
     myfbu.monitoring = defaultOptions['monitoring']
-    myfbu.verbose =defaultOptions['verbose']
+    myfbu.verbose = defaultOptions['verbose']
     myfbu.sampling_progressbar = True
 
     truth = json.load(open(truth))
@@ -74,12 +75,16 @@ def main(args):
         os.makedirs(myfbu.name)
     print('Running FBU...')
     myfbu.run()
+
     trace = myfbu.trace
+    np.save(outdir+'/trace', trace)
 
-    np.save(outdir+'/fulltrace',trace)
+    nptrace = myfbu.nuisancestrace
+    with open('{}/nptrace.pkl'.format(outdir), 'wb') as dictfile:
+        pickle.dump(nptrace, dictfile)
 
-    with open(outdir+'/'+'fulltrace.json','w') as outf:
-        json.dump(formattrace(trace),outf, default=default)
+   # with open(outdir+'/'+'trace.json','w') as outf:
+   #     json.dump(formattrace(trace), outf, default=default)
 
 
 
